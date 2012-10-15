@@ -58,8 +58,6 @@ class Reporter(object):
       """    
     def out(self, txt):
         self.txt = txt
-        sys.stdout.write(str(self))
-        sys.stdout.flush()
         return txt
     def __str__(self):
         return self.txt
@@ -88,12 +86,13 @@ class Runner(doctest.DocTestRunner):
         reporter.failed = True
         return doctest.DocTestRunner.report_failure(self, out, test, example, got)
     def report_success(self, out, test, example, got):
-        example.got =got 
+        example.got = got 
         reporter.examples.append(example)
         return doctest.DocTestRunner.report_success(self, out, test, example, got)    
     def report_unexpected_exception(self, out, test, example, exc_info):
         example.got = str(exc_info)
         reporter.examples.append(example)
+        reporter.failed = True
         return doctest.DocTestRunner.report_unexpected_exception(self, out, test, example, exc_info)
          
         
@@ -108,7 +107,6 @@ def test(func):
     globs['reporter'] = reporter
     for t in tests:
         t.globs = globs
-        runner.run(t)
-        # oh darn.  how do we tell ipython that this captured object with its _repr_html_ is the cell result?
+        runner.run(t, out=reporter.out)
     func._repr_html_ = reporter._repr_html_            
-    return func
+    return reporter
