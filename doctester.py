@@ -27,12 +27,6 @@ Notes:
 
   - It's easy to cheat by simply not including a doctest.  The test will report success...
   
-  - If your return values contain elements that look exactly like they came from a 
-    docstring result - like '\nGot:\n    ' - chaos will ensue.  C'mon, be nice.
-    
-  - This is fragile and depends on doctest's typical output format.  If that format ever
-    changes, this will need repair.
-    
     Developed for the Dayton Python Workshop: https://openhatch.org/wiki/Dayton_Python_Workshop
     catherine.devlin@gmail.com
     
@@ -45,6 +39,7 @@ class Reporter(object):
     def __init__(self):
         self.failed = False
         self.examples = []
+        self.txt = ''
     fail_template = """
       <p><span style="color:red;">Oops!</span>  Not quite there yet...</p>
       <table>
@@ -57,7 +52,7 @@ class Reporter(object):
       <p style="color:green;font-size:250%;font-weight=bold">Success!</p>
       """    
     def out(self, txt):
-        self.txt = txt
+        self.txt = self.txt + txt
         return txt
     def __str__(self):
         return self.txt
@@ -90,10 +85,12 @@ class Runner(doctest.DocTestRunner):
         reporter.examples.append(example)
         return doctest.DocTestRunner.report_success(self, out, test, example, got)    
     def report_unexpected_exception(self, out, test, example, exc_info):
-        example.got = str(exc_info)
         reporter.examples.append(example)
         reporter.failed = True
-        return doctest.DocTestRunner.report_unexpected_exception(self, out, test, example, exc_info)
+        trim = len(reporter.txt)
+        result = doctest.DocTestRunner.report_unexpected_exception(self, out, test, example, exc_info)
+        example.got = reporter.txt[trim:].split('Exception raised:')[1]
+        return result
          
         
 runner = Runner()
