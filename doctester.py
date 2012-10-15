@@ -39,62 +39,12 @@ Notes:
 
 """
 
-# Thanks to StackOverflow user1200039 for the capture recipe
-@contextlib.contextmanager
-def capture():
-    """Capture stdout as a string.
-   
-    Use as a context manager:
-    
-    with capture() as out:
-        print 'hi'    
-    out == 'hi'
-    
-    Thanks to StackOverflow user1200039 for this recipe.
-    """
-    from cStringIO import StringIO
-    oldout,olderr = sys.stdout, sys.stderr
-    try:
-        out=[StringIO(), StringIO()]
-        sys.stdout,sys.stderr = out
-        yield out
-    finally:
-        sys.stdout,sys.stderr = oldout, olderr
-        out[0] = out[0].getvalue()
-        out[1] = out[1].getvalue()
+finder = doctest.DocTestFinder()
 
-class Failure(object):
-    """A failed test case, as interpreted from doctest's output."""
-    template = '<tr><td><code><pre>%s</pre></code></td><td><pre>%s</pre></td><td><pre>%s</pre></td></tr>'
-    def __init__(self, raw_txt):
-        self.raw_txt = raw_txt
-        self.exception = False
-        if '\nGot:\n    ' in raw_txt:
-            (txt, self.actual) = raw_txt.split('\nGot:\n    ')
-        elif '\nGot nothing\n' in raw_txt:
-            (txt, self.actual) = raw_txt.split('\nGot nothing\n')
-            self.actual = 'nothing (None)'
-        elif '\nException raised:\n    Traceback (most recent call last):\n     ' in raw_txt:
-            (txt, self.actual) = raw_txt.split('\nException raised:\n    ')
-            self.actual = '\nException raised:\n    %s' % self.actual
-            self.exception = True
-            self.expected = ''  # not true, but doctest doesn't report the expected during exception
-        self.actual = self.actual.strip()
-        if not self.exception:
-            (txt, self.expected) = txt.split('\nExpected:\n    ') 
-        self.expected = self.expected.strip()
-        (txt, self.called) = txt.split('\nFailed example:\n    ')
-        self.called = self.called.strip()
-    def __str__(self):
-        return raw_txt
-    def _repr_html_(self):
-        return self.template % (cgi.escape(self.called), 
-                                cgi.escape(self.expected), 
-                                cgi.escape(self.actual))
-
-    
-class AllTestsResult(object):
-    """Results of running the doctests on a single function or class."""
+class Reporter(object):
+    def __init__(self):
+        self.failed = False
+        self.examples = []
     fail_template = """
       <p><span style="color:red;">Oops!</span>  Not quite there yet...</p>
       <table>
@@ -102,27 +52,63 @@ class AllTestsResult(object):
         %s
       </table>
       """
+    example_template = '<tr><td><code><pre>%s</pre></code></td><td><pre>%s</pre></td><td><pre>%s</pre></td></tr>'
     success_template = """
       <p style="color:green;font-size:250%;font-weight=bold">Success!</p>
-      """
-    def __init__(self, captured_list):
-        self.failures = []
-        self.rawtxt = captured_list[0]
-        raw_failures = self.rawtxt.split('**********************************************************************')
-        for raw_failure in raw_failures:
-            if raw_failure:
-                self.failures.append(Failure(raw_failure))
+      """    
+    def out(self, txt):
+        self.txt = txt
+        sys.stdout.write(str(self))
+        sys.stdout.flush()
+        return txt
     def __str__(self):
-        return self.rawtxt
+        return self.txt
     def _repr_html_(self):
-        """Called by ipython notebook to represent result in page."""
-        if self.failures:
-            result = self.fail_template % '\n        '.join(f._repr_html_() for f in self.failures)
+        if self.failed:
+            examples = '\n        '.join(self.example_template % 
+                                 (cgi.escape(e.source), cgi.escape(e.want), 
+                                  cgi.escape(e.got)
+                                  )for e in self.examples)
+            result = """
+        <p><span style="color:red;">Oops!</span>  Not quite there yet...</p>
+        <table>
+          <tr><th>Tried</th><th>Expected</th><th>Got</th></tr>""" + examples + """
+        </table>
+        """
         else:
             result = self.success_template
         return result
-       
+        
+reporter = Reporter()
+
+class Runner(doctest.DocTestRunner):
+    def report_failure(self, out, test, example, got):
+        example.got = got
+        reporter.examples.append(example)
+        reporter.failed = True
+        return doctest.DocTestRunner.report_failure(self, out, test, example, got)
+    def report_success(self, out, test, example, got):
+        example.got =got 
+        reporter.examples.append(example)
+        return doctest.DocTestRunner.report_success(self, out, test, example, got)    
+    def report_unexpected_exception(self, out, test, example, exc_info):
+        example.got = str(exc_info)
+        reporter.examples.append(example)
+        return doctest.DocTestRunner.report_unexpected_exception(self, out, test, example, exc_info)
+         
+        
+runner = Runner()
+finder = doctest.DocTestFinder()
+
 def test(func):
-    with capture() as result:
-        doctest.run_docstring_examples(func, {func.__name__: func})
-    return AllTestsResult(result)
+    tests = finder.find(func)
+    globs = {} # globals() # TODO: get the ipython globals
+    reporter.__init__()
+    globs[func.__name__] = func
+    globs['reporter'] = reporter
+    for t in tests:
+        t.globs = globs
+        runner.run(t)
+        # oh darn.  how do we tell ipython that this captured object with its _repr_html_ is the cell result?
+        
+    return func
