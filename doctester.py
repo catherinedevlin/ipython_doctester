@@ -110,5 +110,5 @@ def test(func):
         t.globs = globs
         runner.run(t)
         # oh darn.  how do we tell ipython that this captured object with its _repr_html_ is the cell result?
-        
+    func._repr_html_ = reporter._repr_html_            
     return func
