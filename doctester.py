@@ -96,9 +96,16 @@ class Runner(doctest.DocTestRunner):
 runner = Runner()
 finder = doctest.DocTestFinder()
 
+"""
+? - possible approach ?
+def result_display(self, arg):
+    if hasattr(arg, '_repr_html_'):
+        '''http://osdir.com/ml/python.ipython.user/2006-06/msg00065.html '''
+"""
+        
 def test(func):
     tests = finder.find(func)
-    globs = {} # globals() # TODO: get the ipython globals
+    globs = {} # globals() # TODO: get the ipython globals?
     reporter.__init__()
     globs[func.__name__] = func
     globs['reporter'] = reporter
@@ -107,3 +114,10 @@ def test(func):
         runner.run(t, out=reporter.out)
     func._repr_html_ = reporter._repr_html_            
     return reporter
+
+def test_me(func):
+    result = test(func)
+    # print result - this displays the plaintext result
+    func._repr_html_ = result._repr_html_
+    return func
+
