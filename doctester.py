@@ -2,6 +2,7 @@ import doctest
 import sys
 import contextlib
 import cgi
+import IPython.core.display
 
 """Run doctests on a single class or function, and report for IPython Notebook.
 
@@ -51,11 +52,14 @@ class Reporter(object):
     success_template = """
       <p style="color:green;font-size:250%;font-weight=bold">Success!</p>
       """    
-    def out(self, txt):
-        self.txt = self.txt + txt
-        return txt
-    def __str__(self):
-        return self.txt
+    def trap_txt(self, txt):
+        self.txt += txt
+    def publish(self, html=True):
+        if html:
+            IPython.core.display.publish_html(self._repr_html_())
+        else:
+            IPython.core.display.publish_pretty(self.txt)
+            #IPython.core.display.publish_pretty(self._repr_html_())
     def _repr_html_(self):
         if self.failed:
             examples = '\n        '.join(self.example_template % 
@@ -85,25 +89,18 @@ class Runner(doctest.DocTestRunner):
         reporter.examples.append(example)
         return doctest.DocTestRunner.report_success(self, out, test, example, got)    
     def report_unexpected_exception(self, out, test, example, exc_info):
-        reporter.examples.append(example)
         reporter.failed = True
         trim = len(reporter.txt)
         result = doctest.DocTestRunner.report_unexpected_exception(self, out, test, example, exc_info)
         example.got = reporter.txt[trim:].split('Exception raised:')[1]
+        reporter.examples.append(example)
         return result
          
         
 runner = Runner()
 finder = doctest.DocTestFinder()
 
-"""
-? - possible approach ?
-def result_display(self, arg):
-    if hasattr(arg, '_repr_html_'):
-        '''http://osdir.com/ml/python.ipython.user/2006-06/msg00065.html '''
-"""
-        
-def test(func):
+def testobj(func):
     tests = finder.find(func)
     globs = {} # globals() # TODO: get the ipython globals?
     reporter.__init__()
@@ -111,13 +108,11 @@ def test(func):
     globs['reporter'] = reporter
     for t in tests:
         t.globs = globs
-        runner.run(t, out=reporter.out)
-    func._repr_html_ = reporter._repr_html_            
+        runner.run(t, out=reporter.trap_txt)
+        reporter.publish()
     return reporter
 
-def test_me(func):
-    result = test(func)
-    # print result - this displays the plaintext result
-    func._repr_html_ = result._repr_html_
+def test(func):
+    result = testobj(func)
     return func
 
