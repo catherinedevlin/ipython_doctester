@@ -1,8 +1,6 @@
 import doctest
-import sys
-import contextlib
 import cgi
-import IPython.core.display
+import IPython.zmq.zmqshell  # get_ipython() returns an object of this type if in notebook
 
 """Run doctests on a single class or function, and report for IPython Notebook.
 
@@ -34,9 +32,16 @@ Notes:
 
 """
 
+import ipdb
+ipdb.set_trace()
+
 finder = doctest.DocTestFinder()
 
 class Reporter(object):
+    if isinstance(get_ipython(), IPython.zmq.zmqshell.ZMQInteractiveShell):
+        html = True
+    else:
+        html = False
     def __init__(self):
         self.failed = False
         self.examples = []
@@ -54,12 +59,11 @@ class Reporter(object):
       """    
     def trap_txt(self, txt):
         self.txt += txt
-    def publish(self, html=True):
-        if html:
+    def publish(self):
+        if self.html:
             IPython.core.display.publish_html(self._repr_html_())
         else:
             IPython.core.display.publish_pretty(self.txt)
-            #IPython.core.display.publish_pretty(self._repr_html_())
     def _repr_html_(self):
         if self.failed:
             examples = '\n        '.join(self.example_template % 
