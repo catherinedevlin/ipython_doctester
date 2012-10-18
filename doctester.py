@@ -32,9 +32,6 @@ Notes:
 
 """
 
-import ipdb
-ipdb.set_trace()
-
 finder = doctest.DocTestFinder()
 
 class Reporter(object):
