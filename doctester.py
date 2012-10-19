@@ -10,7 +10,7 @@ run_tests = True
 Lets you create an interactive tutorial in IPython Notebook with doctests to guide
 a student along.  Start the notebook with this import:
 
-    In [1]: from doctester import test
+    In [1]: from ipython_doctester import test
    
 In each subsequent cell, set up objects with their doctests, and with absent (or flawed)
 function bodies, and decorate them with @test.
@@ -25,7 +25,7 @@ function bodies, and decorate them with @test.
 When the student evaluates the cell, she will get feedback on her solution.            
 
 If you want to turn off automatic testing but don't want to take the @test
-decorators off, set doctester.run_tests = False.
+decorators off, set ipython_doctester.run_tests = False.
 
 Notes: 
 
@@ -86,7 +86,6 @@ reporter = Reporter()
 
 class Runner(doctest.DocTestRunner):
     def _or_nothing(self, x):
-        #import ipdb; ipdb.set_trace()
         if x in (None, ''):
             return 'Nothing'
         elif hasattr(x, 'strip') and x.strip() == '':
