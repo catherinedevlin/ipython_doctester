@@ -29,8 +29,7 @@ decorators off, set doctester.run_tests = False.
 
 Notes: 
 
-  - It's easy to cheat by simply not including a doctest.  The test will report success...
-    or changing the doctest, or whatever. 
+  - It's easy to cheat by simply deleting or changing the doctest.
   
     Developed for the Dayton Python Workshop: https://openhatch.org/wiki/Dayton_Python_Workshop
     catherine.devlin@gmail.com
@@ -56,7 +55,7 @@ class Reporter(object):
         %s
       </table>
       """
-    example_template = '<tr><td><code><pre>%s</pre></code></td><td><pre>%s</pre></td><td><pre>%s</pre></td></tr>'
+    example_template = '<tr><td><code><pre>%s</pre></code></td><td><pre>%s</pre></td><td><pre style="color:%s">%s</pre></td></tr>'
     success_template = """
       <p style="color:green;font-size:250%;font-weight=bold">Success!</p>
       """    
@@ -71,7 +70,7 @@ class Reporter(object):
         if self.failed:
             examples = '\n        '.join(self.example_template % 
                                  (cgi.escape(e.source), cgi.escape(e.want), 
-                                  cgi.escape(e.got)
+                                  e.color, cgi.escape(e.got)
                                   )for e in self.examples)
             result = """
         <p><span style="color:red;">Oops!</span>  Not quite there yet...</p>
@@ -86,13 +85,22 @@ class Reporter(object):
 reporter = Reporter()
 
 class Runner(doctest.DocTestRunner):
+    def _or_nothing(self, x):
+        #import ipdb; ipdb.set_trace()
+        if x in (None, ''):
+            return 'Nothing'
+        elif hasattr(x, 'strip') and x.strip() == '':
+            return '<BLANKLINE>'
+        return x
     def report_failure(self, out, test, example, got):
-        example.got = got
+        example.got = self._or_nothing(got)
+        example.color = 'red'
         reporter.examples.append(example)
         reporter.failed = True
         return doctest.DocTestRunner.report_failure(self, out, test, example, got)
     def report_success(self, out, test, example, got):
-        example.got = got 
+        example.got = self._or_nothing(got)
+        example.color = 'green'
         reporter.examples.append(example)
         return doctest.DocTestRunner.report_success(self, out, test, example, got)    
     def report_unexpected_exception(self, out, test, example, exc_info):
@@ -100,6 +108,7 @@ class Runner(doctest.DocTestRunner):
         trim = len(reporter.txt)
         result = doctest.DocTestRunner.report_unexpected_exception(self, out, test, example, exc_info)
         example.got = reporter.txt[trim:].split('Exception raised:')[1]
+        example.color = 'red'
         reporter.examples.append(example)
         return result
          
