@@ -1,6 +1,6 @@
 import doctest
 import cgi
-import IPython.zmq.zmqshell  # get_ipython() returns an object of this type if in notebook
+import IPython.core.display
 
 """Run doctests on a single class or function, and report for IPython Notebook.
 
@@ -10,21 +10,24 @@ a student along.  Start the notebook with this import:
     In [1]: from doctester import test
     
 In each subsequent cell, set up objects with their doctests, and with absent (or flawed)
-function bodies; then include a call to test().
+function bodies, and decorate them with @test_html (or @test if you want plain text,
+such as if you're not in the IPython Notebook).
 
-    In [2]: def square(x):
+    In [2]: @test_html
+            def square(x):
                 '''
                 >>> f(2)
                 4
                 '''
-                
-            test(square)
             
 When the student evaluates the cell, she will get feedback on her solution.            
 
 Notes: 
 
   - It's easy to cheat by simply not including a doctest.  The test will report success...
+  
+  - Still hoping to find a way for @test to automatically detect it's being run from
+    the Notebook and publish HTML output accordingly.
   
     Developed for the Dayton Python Workshop: https://openhatch.org/wiki/Dayton_Python_Workshop
     catherine.devlin@gmail.com
@@ -35,10 +38,6 @@ Notes:
 finder = doctest.DocTestFinder()
 
 class Reporter(object):
-    if isinstance(get_ipython(), IPython.zmq.zmqshell.ZMQInteractiveShell):
-        html = True
-    else:
-        html = False
     def __init__(self):
         self.failed = False
         self.examples = []
@@ -56,8 +55,8 @@ class Reporter(object):
       """    
     def trap_txt(self, txt):
         self.txt += txt
-    def publish(self):
-        if self.html:
+    def publish(self, html):
+        if html:
             IPython.core.display.publish_html(self._repr_html_())
         else:
             IPython.core.display.publish_pretty(self.txt)
@@ -101,7 +100,7 @@ class Runner(doctest.DocTestRunner):
 runner = Runner()
 finder = doctest.DocTestFinder()
 
-def testobj(func):
+def testobj(func, html=False):
     tests = finder.find(func)
     globs = {} # globals() # TODO: get the ipython globals?
     reporter.__init__()
@@ -110,10 +109,13 @@ def testobj(func):
     for t in tests:
         t.globs = globs
         runner.run(t, out=reporter.trap_txt)
-        reporter.publish()
+        reporter.publish(html)
     return reporter
 
 def test(func):
-    result = testobj(func)
+    result = testobj(func, html=False)
     return func
 
+def test_html(func):
+    result = testobj(func, html=True)
+    return func
