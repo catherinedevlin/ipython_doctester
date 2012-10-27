@@ -93,12 +93,14 @@ class Runner(doctest.DocTestRunner):
         return x
     def report_failure(self, out, test, example, got):
         example.got = self._or_nothing(got)
+        example.want = self._or_nothing(example.want)
         example.color = 'red'
         reporter.examples.append(example)
         reporter.failed = True
         return doctest.DocTestRunner.report_failure(self, out, test, example, got)
     def report_success(self, out, test, example, got):
         example.got = self._or_nothing(got)
+        example.want = self._or_nothing(example.want)
         example.color = 'green'
         reporter.examples.append(example)
         return doctest.DocTestRunner.report_success(self, out, test, example, got)    
@@ -107,6 +109,7 @@ class Runner(doctest.DocTestRunner):
         trim = len(reporter.txt)
         result = doctest.DocTestRunner.report_unexpected_exception(self, out, test, example, exc_info)
         example.got = reporter.txt[trim:].split('Exception raised:')[1]
+        example.want = self._or_nothing(example.want)
         example.color = 'red'
         reporter.examples.append(example)
         return result
@@ -116,18 +119,20 @@ runner = Runner()
 finder = doctest.DocTestFinder()
 
 def testobj(func):
+    #import ipdb; ipdb.set_trace()
     tests = finder.find(func)
     globs = {} # globals() # TODO: get the ipython globals?
     reporter.__init__()
     globs[func.__name__] = func
     globs['reporter'] = reporter
     for t in tests:
-        t.globs = globs
+        t.globs = globs.copy()
         runner.run(t, out=reporter.trap_txt)
-        reporter.publish()
+    reporter.publish()
     return reporter
 
 def test(func):
+    #import ipdb; ipdb.set_trace()
     if run_tests:
         result = testobj(func)
     return func
