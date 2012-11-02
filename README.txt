@@ -13,12 +13,12 @@ navigate to this directory and run::
 Use
 ===
 
-Run ``ipython notebook``, then start your notebook with this import:
+Run ``ipython notebook``, then start your notebook with this import::
 
     In [1]: from ipython_doctester import test
 
 In each subsequent cell, set up objects with their doctests, and with absent 
-(or flawed) function bodies, and decorate them with @test.
+(or flawed) function bodies, and decorate them with @test::
 
     In [2]: @test
             def square(x):
