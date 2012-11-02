@@ -19,7 +19,7 @@ import cgi
 import sys
 import IPython.zmq.displayhook
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 run_tests = True
 finder = doctest.DocTestFinder()
 
