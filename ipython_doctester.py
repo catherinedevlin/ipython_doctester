@@ -1,19 +1,13 @@
-import doctest
-import cgi
-import sys
-import IPython.zmq.displayhook
-
-run_tests = True
 
 """Run doctests on a single class or function, and report for IPython Notebook.
 
-Lets you create an interactive tutorial in IPython Notebook with doctests to guide
-a student along.  Start the notebook with this import:
+Lets you create an interactive tutorial in IPython Notebook with doctests
+to guide a student along.  Start the notebook with this import:
 
     In [1]: from ipython_doctester import test
-   
-In each subsequent cell, set up objects with their doctests, and with absent (or flawed)
-function bodies, and decorate them with @test.
+
+In each subsequent cell, set up objects with their doctests, and with absent 
+(or flawed) function bodies, and decorate them with @test.
 
     In [2]: @test
             def square(x):
@@ -21,23 +15,29 @@ function bodies, and decorate them with @test.
                 >>> f(2)
                 4
                 '''
-            
+
 When the student evaluates the cell, she will get feedback on her solution.            
 
 If you want to turn off automatic testing but don't want to take the @test
 decorators off, set ipython_doctester.run_tests = False.
 
-Notes: 
-
-  - It's easy to cheat by simply deleting or changing the doctest.
+Note: It's easy to cheat by simply deleting or changing the doctest.
   
-    Developed for the Dayton Python Workshop: https://openhatch.org/wiki/Dayton_Python_Workshop
-    catherine.devlin@gmail.com
-    
+Developed for the Dayton Python Workshop: 
+https://openhatch.org/wiki/Dayton_Python_Workshop
+catherine.devlin@gmail.com
 
 """
 
+import doctest
+import cgi
+import sys
+import IPython.zmq.displayhook
+
+__version__ = '0.1.0'
+run_tests = True
 finder = doctest.DocTestFinder()
+
 
 class Reporter(object):
     if isinstance(sys.displayhook, IPython.zmq.displayhook.ZMQShellDisplayHook):
@@ -81,8 +81,10 @@ class Reporter(object):
         else:
             result = self.success_template
         return result
+
         
 reporter = Reporter()
+
 
 class Runner(doctest.DocTestRunner):
     def _or_nothing(self, x):
@@ -107,7 +109,8 @@ class Runner(doctest.DocTestRunner):
     def report_unexpected_exception(self, out, test, example, exc_info):
         reporter.failed = True
         trim = len(reporter.txt)
-        result = doctest.DocTestRunner.report_unexpected_exception(self, out, test, example, exc_info)
+        result = doctest.DocTestRunner.report_unexpected_exception(
+            self, out, test, example, exc_info)
         example.got = reporter.txt[trim:].split('Exception raised:')[1]
         example.want = self._or_nothing(example.want)
         example.color = 'red'
@@ -118,10 +121,10 @@ class Runner(doctest.DocTestRunner):
 runner = Runner()
 finder = doctest.DocTestFinder()
 
+
 def testobj(func):
-    #import ipdb; ipdb.set_trace()
     tests = finder.find(func)
-    globs = {} # globals() # TODO: get the ipython globals?
+    globs = {}  # TODO: get the ipython globals?
     reporter.__init__()
     globs[func.__name__] = func
     globs['reporter'] = reporter
@@ -132,7 +135,6 @@ def testobj(func):
     return reporter
 
 def test(func):
-    #import ipdb; ipdb.set_trace()
     if run_tests:
         result = testobj(func)
     return func
