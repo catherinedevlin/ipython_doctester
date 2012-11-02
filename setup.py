@@ -13,7 +13,7 @@ setup(
     description='Run doctests in individual IPython Notebook cells',
     long_description=open('README.txt').read(),
     install_requires=[
-        #  "ipython >= 0.13",  actually requires the development trunk
+        "ipython >= 0.13", 
         "pyzmq >= 2.1.4",
         ]
 )
