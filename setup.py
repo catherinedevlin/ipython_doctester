@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='ipython_doctester',
@@ -6,7 +6,9 @@ setup(
     author_email='catherine.devlin@gmail.com',
     version='0.1.0',
     url='http://pypi.python.org/pypi/ipython_doctester/',
-    packages=['towelstuff',],
+    py_modules = [
+        "ipython_doctester",
+        ],
     license='MIT',
     description='Run doctests in individual IPython Notebook cells',
     long_description=open('README.txt').read(),
