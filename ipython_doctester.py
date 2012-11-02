@@ -1,22 +1,7 @@
 
 """Run doctests on a single class or function, and report for IPython Notebook.
 
-Lets you create an interactive tutorial in IPython Notebook with doctests
-to guide a student along.  Start the notebook with this import:
-
-    In [1]: from ipython_doctester import test
-
-In each subsequent cell, set up objects with their doctests, and with absent 
-(or flawed) function bodies, and decorate them with @test.
-
-    In [2]: @test
-            def square(x):
-                '''
-                >>> f(2)
-                4
-                '''
-
-When the student evaluates the cell, she will get feedback on her solution.            
+Decorate each function or class to be tested with ``ipython_doctester.test``.
 
 If you want to turn off automatic testing but don't want to take the @test
 decorators off, set ipython_doctester.run_tests = False.
