@@ -63,9 +63,9 @@ class Reporter(object):
         self.txt += txt
     def publish(self):
         if self.html:
-            IPython.core.display.publish_html(self._repr_html_())
+            IPython.core.displaypub.publish_html(self._repr_html_())
         else:
-            IPython.core.display.publish_pretty(self.txt)
+            IPython.core.displaypub.publish_pretty(self.txt)
     def _repr_html_(self):
         if self.failed:
             examples = '\n        '.join(self.example_template % 
