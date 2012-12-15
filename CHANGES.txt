@@ -1,1 +1,2 @@
 v0.1.0, Nov 3 2012 -- Initial release
+v0.2.0, Dec 16 2012 -- optional ``verbose``; report results to ipython-docent.appspot.com
