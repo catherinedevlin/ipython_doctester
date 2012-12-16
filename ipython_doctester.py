@@ -21,7 +21,7 @@ import sys
 import requests
 import IPython.zmq.displayhook
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 finder = doctest.DocTestFinder()
 docent_url = 'http://ipython-docent.appspot.com'
 
