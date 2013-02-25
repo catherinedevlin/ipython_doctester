@@ -33,11 +33,11 @@ student_name = None
 workshop_name = None
 verbose = False       # True causes the result table to print even for successes
 
+def running_from_notebook():
+    return isinstance(sys.displayhook, IPython.zmq.displayhook.ZMQShellDisplayHook)
+
 class Reporter(object):
-    if isinstance(sys.displayhook, IPython.zmq.displayhook.ZMQShellDisplayHook):
-        html = True
-    else:
-        html = False
+    html = running_from_notebook()
     def __init__(self):
         self.failed = False
         self.examples = []
@@ -110,9 +110,39 @@ class Runner(doctest.DocTestRunner):
 runner = Runner()
 finder = doctest.DocTestFinder()
 
-
+class IPythonDoctesterException(StandardError):    
+    def _repr_html_(self):
+        return '<pre>\n%s\n</pre>' % self.txt
+    
+class NoTestsException(IPythonDoctesterException):
+    txt = """
+    OOPS!  We expected to find a doctest - 
+    a string immediately after the function definition, looking something like
+        def do_something():
+            '''
+            >>> do_something()
+            'did something'
+            ''' 
+    ... but it wasn't there.  Did you insert code between the function definition
+    and the doctest?   
+    """
+   
+class NoStudentNameException(IPythonDoctesterException):
+    txt = """
+    OOPS!  We need you to set the ipython_doctester.student_name variable; 
+    please look for it (probably in the first cell in this worksheet) and
+    enter your name, like
+        ipython_doctester.student_name = 'Catherine'
+    ... then hit Shift+Enter to execute that cell, then come back here to
+    execute this one.
+    """
+    
 def testobj(func):
     tests = finder.find(func)
+    if not tests:
+        raise NoTestsException
+    if workshop_name and not student_name:
+        raise NoStudentNameException()
     globs = {}  # TODO: get the ipython globals?
     reporter.__init__()
     globs[func.__name__] = func
@@ -121,16 +151,26 @@ def testobj(func):
         t.globs = globs.copy()
         runner.run(t, out=reporter.trap_txt)
     reporter.publish()
-    if workshop_name and student_name:
+    if workshop_name:
         payload = dict(function_name = func.__name__, 
                        failure=reporter.failed, 
                        source=inspect.getsource(func),
                        workshop_name = workshop_name,
                        student_name = student_name)
         requests.post(docent_url+'/record', data=payload)
+            
     return reporter
+
+def report_error(e):
+    if running_from_notebook():
+        IPython.core.displaypub.publish_html(e._repr_html_())
+    else:
+        IPython.core.displaypub.publish_pretty(e.txt)
 
 def test(func):
     if run_tests:
-        result = testobj(func)
+        try:
+            result = testobj(func)
+        except (NoStudentNameException, NoTestsException) as e:
+            report_error(e)
     return func
