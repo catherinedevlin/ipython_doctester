@@ -6,7 +6,13 @@ Decorate each function or class to be tested with ``ipython_doctester.test``.
 If you want to turn off automatic testing but don't want to take the @test
 decorators off, set ipython_doctester.run_tests = False.
 
-Note: It's easy to cheat by simply deleting or changing the doctest.
+Note: It's easy to cheat by simply deleting or changing the doctest.  That's
+OK, cheating is learning, too.
+
+If you want to track students' progress through a notebook in a 
+classroom setting, you can; see 
+http://ipython-docent.appspot.com/
+for instructions.
   
 Developed for the Dayton Python Workshop: 
 https://openhatch.org/wiki/Dayton_Python_Workshop
@@ -21,17 +27,20 @@ import sys
 import requests
 import IPython.zmq.displayhook
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 finder = doctest.DocTestFinder()
 docent_url = 'http://ipython-docent.appspot.com'
 
-"""Set these per session as desired.  
-Setting a workshop_name and student_name will register results with IPython Docent
-under the url http://"""
+"""Set these per session, as desired."""
 run_tests = True
+verbose = False    # ``True`` causes the result table to print,
+                   # even for successes
+
+"""Set these if desired to track student progress
+at http://ipython-docent.appspot.com/.  
+See that page for more instructions."""
 student_name = None
 workshop_name = None
-verbose = False       # True causes the result table to print even for successes
 
 def running_from_notebook():
     return isinstance(sys.displayhook, IPython.zmq.displayhook.ZMQShellDisplayHook)

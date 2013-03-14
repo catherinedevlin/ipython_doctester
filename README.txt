@@ -29,6 +29,11 @@ In each subsequent cell, set up objects with their doctests, and with absent
                 
 Tests will run on each cell as it is executed.
 
+If you want to track students' progress through a notebook in a 
+classroom setting, you can; see 
+http://ipython-docent.appspot.com/
+for instructions.
+
 Development
 ===========
 
