@@ -25,6 +25,8 @@ import doctest
 import cgi
 import inspect
 import sys
+import os
+import os.path
 import requests
 
 
@@ -41,6 +43,7 @@ except ImportError:
 __version__ = '0.2.2'
 finder = doctest.DocTestFinder()
 docent_url = 'http://ipython-docent.appspot.com'
+doctest_path = './doctests'
 
 """Set these per session, as desired."""
 run_tests = True
@@ -187,7 +190,16 @@ class NoStudentNameException(IPythonDoctesterException):
 def testobj(func):
     tests = finder.find(func)
     if not tests:
-        raise NoTestsException
+        doctest_filename = os.path.join(os.curdir, doctest_path, func.__name__
+                                        ) + '.txt'
+        try:
+            with open(doctest_filename) as infile:
+                func.__doc__ = infile.read()
+        except IOError:
+            raise NoTestsException
+        tests = finder.find(func)
+        if not tests:
+            raise NoTestsException
     if workshop_name and not student_name:
         raise NoStudentNameException()
     globs = {}  # TODO: get the ipython globals?
@@ -208,18 +220,10 @@ def testobj(func):
 
     return reporter
 
-
-def report_error(e):
-    if running_from_notebook():
-        IPython.core.displaypub.publish_html(e._repr_html_())
-    else:
-        IPython.core.displaypub.publish_pretty(e.txt)
-
-
 def test(func):
     if run_tests:
         try:
             result = testobj(func)
         except (NoStudentNameException, NoTestsException) as e:
-            report_error(e)
+             IPython.core.display.display(e)
     return func
