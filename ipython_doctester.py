@@ -40,7 +40,7 @@ except ImportError:
     from IPython.kernel.zmq import displayhook as zmq_displayhook
 
 
-__version__ = '0.2.2'
+__version__ = '0.3.0'
 finder = doctest.DocTestFinder()
 docent_url = 'http://ipython-docent.appspot.com'
 doctest_path = './doctests'
@@ -189,12 +189,12 @@ class NoStudentNameException(IPythonDoctesterException):
 
 def testobj(func):
     tests = finder.find(func)
-    if not tests:
+    if (not tests) or (not tests[0].examples):
         doctest_filename = os.path.join(os.curdir, doctest_path, func.__name__
                                         ) + '.txt'
         try:
             with open(doctest_filename) as infile:
-                func.__doc__ = infile.read()
+                func.__doc__ = (func.__doc__ or "") + "\n" + infile.read()
         except IOError:
             raise NoTestsException
         tests = finder.find(func)

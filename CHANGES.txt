@@ -3,3 +3,4 @@ v0.2.0, Dec 16 2012 -- optional ``verbose``; report results to ipython-docent.ap
 v0.2.1, Dec 16 2012 -- include requests module in requirements
 v0.2.2, Mar 14 2013 -- include ipython-docent.appspot.com integration
 v0.2.3, Sep 24 2013 -- support of IPython 1.x (zmq in the kernel)
+v0.3.0, Oct 12 2013 -- Inject doctests from .txt files
