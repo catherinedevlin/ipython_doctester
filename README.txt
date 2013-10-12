@@ -34,6 +34,11 @@ classroom setting, you can; see
 http://ipython-docent.appspot.com/
 for instructions.
 
+If no doctests are found in the function's docstring, the program will look 
+for a file ``./docstrings/<function name>.txt``, append that to the function's
+docstring, and check for doctests again.  This can be used to keep the presence
+of the docstrings from confusing students.
+
 Development
 ===========
 
